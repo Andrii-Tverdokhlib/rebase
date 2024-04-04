@@ -28,23 +28,9 @@ MAX_RETRIES=${MAX_RETRIES:-6}
 RETRY_INTERVAL=${RETRY_INTERVAL:-10}
 REBASEABLE=""
 pr_resp=""
-for ((i = 0 ; i < $MAX_RETRIES ; i++)); do
-	pr_resp=$(curl -X GET -s -H "${AUTH_HEADER}" -H "${API_HEADER}" \
-		"${URI}/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
-	REBASEABLE=$(echo "$pr_resp" | jq -r .rebaseable)
-	if [[ "$REBASEABLE" == "null" ]]; then
-		echo "The PR is not ready to rebase, retry after $RETRY_INTERVAL seconds"
-		sleep $RETRY_INTERVAL
-		continue
-	else
-		break
-	fi
-done
 
-if [[ "$REBASEABLE" != "true" ]] ; then
-	echo "GitHub doesn't think that the PR is rebaseable!"
-	exit 1
-fi
+pr_resp=$(curl -X GET -s -H "${AUTH_HEADER}" -H "${API_HEADER}" \
+  "${URI}/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
 
 BASE_REPO=$(echo "$pr_resp" | jq -r .base.repo.full_name)
 BASE_BRANCH=$(echo "$pr_resp" | jq -r .base.ref)
