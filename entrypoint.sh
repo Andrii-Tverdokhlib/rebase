@@ -28,8 +28,17 @@ MAX_RETRIES=${MAX_RETRIES:-6}
 RETRY_INTERVAL=${RETRY_INTERVAL:-10}
 pr_resp=""
 
-pr_resp=$(curl -X GET -s -H "${AUTH_HEADER}" -H "${API_HEADER}" \
-  "${URI}/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
+for ((i = 0 ; i < $MAX_RETRIES ; i++)); do
+    pr_resp=$(curl -X GET -s -H "${AUTH_HEADER}" -H "${API_HEADER}" \
+      "${URI}/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
+    if [ -z "$pr_resp" ]
+    then
+      sleep $RETRY_INTERVAL
+      continue
+    else
+      break
+    fi
+done
 
 if [ -z "$pr_resp" ]
 then
