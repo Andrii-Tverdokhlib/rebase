@@ -26,17 +26,22 @@ AUTH_HEADER="Authorization: token $GITHUB_TOKEN"
 
 MAX_RETRIES=${MAX_RETRIES:-6}
 RETRY_INTERVAL=${RETRY_INTERVAL:-10}
-REBASEABLE=""
 pr_resp=""
 
 pr_resp=$(curl -X GET -s -H "${AUTH_HEADER}" -H "${API_HEADER}" \
   "${URI}/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
 
+if [ -z "$pr_resp" ]
+then
+      echo "Cannot get PR information for PR #$PR_NUMBER!"
+      exit 1
+fi
+
 BASE_REPO=$(echo "$pr_resp" | jq -r .base.repo.full_name)
 BASE_BRANCH=$(echo "$pr_resp" | jq -r .base.ref)
 
 USER_LOGIN=$(jq -r ".comment.user.login" "$GITHUB_EVENT_PATH")
-          
+
 if [[ "$USER_LOGIN" == "null" ]]; then
 	USER_LOGIN=$(jq -r ".pull_request.user.login" "$GITHUB_EVENT_PATH")
 fi
